@@ -62,3 +62,37 @@ footer button:active { transform: scale(0.95); }
 .drawer-header { padding: 15px 20px; display: flex; gap: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); align-items: center; }
 .drawer-header input { flex: 1; padding: 12px 15px; border-radius: 12px; border: none; background: rgba(0,0,0,0.05); color: #333; outline: none; font-size: 15px; }
 .close-btn { background: transparent; border: none; color: #ff8fc7; font-size: 15px; font-weight: 600; }
+.card-list { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; align-content: start; }
+  .card-item { background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.05); padding: 14px 10px; border-radius: 14px; font-size: 14px; text-align: center; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: 0.2s; }
+  .card-item:active { background: #fbc2eb; color: #fff; transform: scale(0.95); }
+
+  /* 设置项 */
+  .set-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .set-item label { font-size: 15px; color: #333; font-weight: 500; }
+  .set-item input[type="text"] { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; width: 150px; text-align: right; }
+  .set-item input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; background: none; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div id="intro">
+  <div class="peach">桃</div>
+  <div class="intro-text">纸短情长 · 字卡传心</div>
+</div>
+
+<header>
+  <div class="header-title" id="taNameDisplay" onclick="openSettings()">梦角 ▼</div>
+  <button class="header-btn" onclick="openSettings()">⚙️ 设置</button>
+</header>
+<main id="chatArea"></main>
+
+<footer>
+  <div class="fake-input" onclick="toggleDrawer()">点击选择字卡发送...</div>
+  <button onclick="toggleDrawer()">＋</button>
+</footer>
+<div id="drawer" class="drawer">
+  <div class="drawer-header">
+    <input type="text" id="searchInput" placeholder="搜索 1200+ 字卡..." oninput="renderCards()">
+    <button class="close-btn" onclick="toggleDrawer()">收起</button>
+  </div>
+  <div id="cardList" class="card-list"></div>
+</div>
