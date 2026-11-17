@@ -65,3 +65,35 @@
 @keyframes introOut{
   to{opacity:0;visibility:hidden;}
 }
+/* ===== 顶部 ===== */
+header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+  padding:14px 20px;
+  border-bottom:1px solid var(--line);
+  background:rgba(11,11,20,.82);
+  backdrop-filter:blur(14px);
+}
+h1{
+  margin:0;
+  font-size:20px;
+  letter-spacing:.06em;
+  background:linear-gradient(90deg,var(--blue),var(--pink));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  white-space:nowrap;
+}
+.char-bar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  margin-left:auto;
+}
+.char-bar label{color:var(--muted);font-size:13px;}
