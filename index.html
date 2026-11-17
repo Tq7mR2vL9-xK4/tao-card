@@ -29,3 +29,39 @@
   }
   button,input,select,textarea{font:inherit;}
   button{cursor:pointer;}
+/* ===== 开场动画：蓝粉“桃” ===== */
+#intro{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0b0b14;
+  pointer-events:none;
+  animation:introOut .8s ease 2.4s forwards;
+}
+.peach{
+  font-size:clamp(140px,28vw,360px);
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.04em;
+  background:linear-gradient(120deg,var(--blue) 0%,var(--purple) 35%,var(--pink) 70%,var(--pink2) 100%);
+  background-size:200% 200%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 0 28px rgba(255,143,199,.3)) drop-shadow(0 0 40px rgba(110,198,255,.2));
+  animation:peachFlow 2.4s ease-in-out infinite alternate, peachPop .9s ease both;
+}
+@keyframes peachFlow{
+  0%{background-position:0% 50%;}
+  100%{background-position:100% 50%;}
+}
+@keyframes peachPop{
+  from{opacity:0;transform:scale(.72);}
+  to{opacity:1;transform:scale(1);}
+}
+@keyframes introOut{
+  to{opacity:0;visibility:hidden;}
+}
