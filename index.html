@@ -160,3 +160,46 @@ function toggleDrawer(id = 'drawer') {
   if (id === 'drawer' && el.classList.contains('open')) renderCards();
 }
 function openSettings() { toggleDrawer('settingsPanel'); }
+function sendCard(text) {
+  state.chats.push({ role: 'me', text: text });
+  save();
+  render();
+  toggleDrawer();
+  setTimeout(() => {
+    const randomReply = allCards[Math.floor(Math.random() * allCards.length)];
+    state.chats.push({ role: 'other', text: randomReply });
+    save();
+    render();
+  }, 800 + Math.random() * 1000);
+    }
+  function updateSetting(key, val) {
+  if (!val.trim()) return;
+  state[key] = val.trim();
+  save();
+  render();
+}
+function updateBubbleColor(color) { state.myBubbleColor = color; save(); render(); }
+
+function handleAvatar(event, key) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) { state[key] = e.target.result; save(); render(); };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function handleBackground(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) { state.chatBg = `url(${e.target.result})`; save(); render(); };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+function resetBg() { state.chatBg = 'linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)'; save(); render(); }
+
+render();
+</script>
+</body>
+</html>
