@@ -327,4 +327,243 @@ function makeBuiltinCards(){
     "想贴贴你","想把今天讲给你听","想把开心分给你","想把心事说给你","想等你回家","想和你散步","想和你发呆","想和你一起吃饭","想和你一起看月亮","想和你一起做梦",
     "想和你一起过普通的一天","想和你一起熬夜","想和你一起早起","想和你一起看海","想和你一起淋雨","想和你一起晒太阳","想和你一起数星星","想和你一起听歌","想和你一起变老","想和你一起慢慢生活"
   ];
-  
+  const cards = [];
+  let n = 0;
+
+  for (const s of s1){
+    for (const a of a1){
+      cards.push({ id: "builtin-" + (n++), text: s + a, ownerId: null, builtin: true });
+    }
+  }
+  for (const s of s2){
+    for (const a of a2){
+      cards.push({ id: "builtin-" + (n++), text: s + a, ownerId: null, builtin: true });
+    }
+  }
+  return cards;
+}
+
+function defaultState(){
+  const charId = uid("char");
+  return {
+    version: 1,
+    chars: [{ id: charId, name: "我的梦角" }],
+    currentCharId: charId,
+    cards: makeBuiltinCards(),
+    logs: {}
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+      const s = JSON.parse(raw);
+      if (s && Array.isArray(s.chars) && Array.isArray(s.cards)){
+        if (!s.logs) s.logs = {};
+        if (!s.currentCharId && s.chars[0]) s.currentCharId = s.chars[0].id;
+        return s;
+      }
+    }
+  }catch(e){
+    console.warn("读取本地数据失败", e);
+  }
+  const s = defaultState();
+  saveState(s);
+  return s;
+}
+
+function saveState(s){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s || state));
+}
+
+let state = loadState();
+  const charSelect = document.getElementById("charSelect");
+const addCharBtn = document.getElementById("addCharBtn");
+const delCharBtn = document.getElementById("delCharBtn");
+const searchInput = document.getElementById("search");
+const filterSelect = document.getElementById("filter");
+const countInfo = document.getElementById("countInfo");
+const cardsEl = document.getElementById("cards");
+const loadMoreBtn = document.getElementById("loadMore");
+const sentCard = document.getElementById("sentCard");
+const logList = document.getElementById("logList");
+const newCards = document.getElementById("newCards");
+const addCardsBtn = document.getElementById("addCardsBtn");
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const importFile = document.getElementById("importFile");
+
+let visibleCount = 300;
+
+function currentChar(){
+  return state.chars.find(c => c.id === state.currentCharId) || state.chars[0] || null;
+                                                       }
+  function renderChars(){
+  charSelect.innerHTML = state.chars.map(c =>
+    `<option value="${c.id}" ${c.id === state.currentCharId ? "selected" : ""}>${escapeHtml(c.name)}</option>`
+  ).join("");
+}
+
+function getFilteredCards(){
+  const q = searchInput.value.trim().toLowerCase();
+  const f = filterSelect.value;
+  const cid = state.currentCharId;
+  return state.cards.filter(card => {
+    if (card.ownerId !== null && card.ownerId !== cid) return false;
+    if (f === "public" && card.ownerId !== null) return false;
+    if (f === "private" && card.ownerId !== cid) return false;
+    if (q && !card.text.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderCards(){
+  const filteredCards = getFilteredCards();
+  const shown = filteredCards.slice(0, visibleCount);
+  cardsEl.innerHTML = shown.map(card => {
+    const isPrivate = card.ownerId !== null;
+    return `
+      <button class="card" data-id="${card.id}" type="button">
+        <span class="card-text">${escapeHtml(card.text)}</span>
+        <span class="tag">${isPrivate ? "专属" : "公用"}</span>
+        ${isPrivate ? `<span class="del" data-del="${card.id}" title="删除这张专属字卡">×</span>` : ""}
+      </button>
+    `;
+  }).join("");
+  countInfo.textContent = `共 ${filteredCards.length} 张，显示 ${Math.min(visibleCount, filteredCards.length)} 张`;
+  loadMoreBtn.classList.toggle("hidden", filteredCards.length <= visibleCount);
+                          }
+  function renderLogs(){
+  const char = currentChar();
+  const logs = (char && state.logs[char.id]) ? state.logs[char.id] : [];
+  if (!logs.length){
+    logList.innerHTML = `<li class="muted">还没有传讯记录</li>`;
+    return;
+  }
+  logList.innerHTML = logs.slice(0, 12).map(item => `
+    <li>
+      <span>${escapeHtml(item.text)}</span>
+      <small>${escapeHtml(item.time)}</small>
+    </li>
+  `).join("");
+}
+
+function renderAll(){
+  renderChars();
+  renderCards();
+  renderLogs();
+}
+
+function sendCard(cardId){
+  const card = state.cards.find(c => c.id === cardId);
+  const char = currentChar();
+  if (!card || !char) return;
+  const time = new Date().toLocaleString("zh-CN", { hour12: false });
+  if (!state.logs[char.id]) state.logs[char.id] = [];
+  state.logs[char.id].unshift({ text: card.text, time: time });
+  state.logs[char.id] = state.logs[char.id].slice(0, 100);
+  saveState();
+  sentCard.textContent = `已向「${char.name}」传讯：${card.text}`;
+  sentCard.classList.add("active");
+  renderLogs();
+}
+  cardsEl.addEventListener("click", function(e){
+  const delEl = e.target.closest("[data-del]");
+  if (delEl){
+    e.stopPropagation();
+    const id = delEl.dataset.del;
+    const card = state.cards.find(c => c.id === id);
+    if (!card) return;
+    if (!confirm(`删除这张专属字卡？\n\n${card.text}`)) return;
+    state.cards = state.cards.filter(c => c.id !== id);
+    saveState();
+    renderCards();
+    return;
+  }
+  const cardEl = e.target.closest(".card");
+  if (cardEl && cardEl.dataset.id) sendCard(cardEl.dataset.id);
+});
+
+addCharBtn.addEventListener("click", function(){
+  const name = prompt("输入新梦角名字：");
+  if (!name || !name.trim()) return;
+  const id = uid("char");
+  state.chars.push({ id: id, name: name.trim() });
+  state.currentCharId = id;
+  saveState();
+  visibleCount = 300;
+  renderAll();
+});
+  delCharBtn.addEventListener("click", function(){
+  if (state.chars.length <= 1){ alert("至少要保留一个梦角。"); return; }
+  const char = currentChar();
+  if (!char) return;
+  if (!confirm(`删除梦角「${char.name}」？\n该梦角的专属字卡和传讯记录也会删除。`)) return;
+  state.chars = state.chars.filter(c => c.id !== char.id);
+  state.cards = state.cards.filter(c => c.ownerId !== char.id);
+  delete state.logs[char.id];
+  state.currentCharId = state.chars[0].id;
+  saveState();
+  visibleCount = 300;
+  sentCard.textContent = "点击左侧字卡，向当前梦角传讯。";
+  sentCard.classList.remove("active");
+  renderAll();
+});
+
+charSelect.addEventListener("change", function(){
+  state.currentCharId = charSelect.value;
+  saveState();
+  visibleCount = 300;
+  sentCard.textContent = "点击左侧字卡，向当前梦角传讯。";
+  sentCard.classList.remove("active");
+  renderAll();
+});
+  exportBtn.addEventListener("click", function(){
+    const data = JSON.stringify(state, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `桃字卡备份-${stamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  importBtn.addEventListener("click", function(){ importFile.click(); });
+
+  importFile.addEventListener("change", function(){
+    const file = importFile.files && importFile.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+      try{
+        const data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.chars) || !Array.isArray(data.cards)) throw new Error("格式不正确");
+        if (!data.logs) data.logs = {};
+        if (!data.currentCharId || !data.chars.some(c => c.id === data.currentCharId)){
+          data.currentCharId = data.chars[0] && data.chars[0].id;
+        }
+        if (!data.currentCharId) throw new Error("没有梦角");
+        state = data;
+        saveState();
+        visibleCount = 300;
+        sentCard.textContent = "点击左侧字卡，向当前梦角传讯。";
+        sentCard.classList.remove("active");
+        renderAll();
+        alert("导入成功。");
+      }catch(err){
+        alert("导入失败：文件不是本站导出的备份，或内容已损坏。");
+      }finally{
+        importFile.value = "";
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
