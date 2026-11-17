@@ -121,3 +121,30 @@ button{
 }
 button:hover{transform:translateY(-1px);border-color:rgba(255,143,199,.45);}
 button.danger{background:rgba(255,80,120,.12);border-color:rgba(255,80,120,.28);}
+/* ===== 布局 ===== */
+main{
+  width:min(1200px,100%);
+  margin:0 auto;
+  padding:20px;
+  display:grid;
+  grid-template-columns:minmax(0,1.6fr) minmax(280px,.9fr);
+  gap:16px;
+}
+.panel{
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  min-width:0;
+}
+.panel h2,.panel h3{margin:0 0 12px;font-size:16px;}
+.panel h3{margin-top:16px;font-size:14px;color:var(--muted);}
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  align-items:center;
+  margin-bottom:12px;
+}
+#search{flex:1;min-width:160px;}
+#countInfo{color:var(--muted);font-size:13px;}
