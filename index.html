@@ -96,3 +96,67 @@ footer button:active { transform: scale(0.95); }
   </div>
   <div id="cardList" class="card-list"></div>
 </div>
+<div id="settingsPanel" class="settings-panel">
+  <div class="drawer-header" style="padding: 0 0 15px 0; border: none;">
+    <h3 style="flex:1; font-size:18px; color:#333;">个性化设置</h3>
+    <button class="close-btn" onclick="toggleDrawer('settingsPanel')">关闭</button>
+  </div>
+  <div class="set-item"><label>我的名字</label><input type="text" id="setMyName" onchange="updateSetting('myName', this.value)"></div>
+  <div class="set-item"><label>我的头像</label><button class="header-btn" onclick="document.getElementById('uploadMyAvatar').click()">点击更换</button><input type="file" id="uploadMyAvatar" accept="image/*" hidden onchange="handleAvatar(event, 'myAvatar')"></div>
+  <div class="set-item"><label>梦角名字</label><input type="text" id="setTaName" onchange="updateSetting('taName', this.value)"></div>
+  <div class="set-item"><label>梦角头像</label><button class="header-btn" onclick="document.getElementById('uploadTaAvatar').click()">点击更换</button><input type="file" id="uploadTaAvatar" accept="image/*" hidden onchange="handleAvatar(event, 'taAvatar')"></div>
+  <div class="set-item"><label>气泡颜色</label><input type="color" id="setBubbleColor" onchange="updateBubbleColor(this.value)"></div>
+  <div class="set-item"><label>聊天背景</label><button class="header-btn" onclick="document.getElementById('uploadBg').click()">上传图片</button><input type="file" id="uploadBg" accept="image/*" hidden onchange="handleBackground(event)"></div>
+  <div class="set-item"><label>恢复默认背景</label><button class="header-btn" onclick="resetBg()">重置</button></div>
+</div>
+<script>
+  const p1 = ["好想","突然好想","今天也","此刻","一直","偷偷","认真地","超想","真的","又","还是","格外","特别","忍不住","总想","只想","想立刻","想马上","想轻轻","想安静地"];
+const s1 = ["抱抱你","亲亲你","见你","靠近你","牵你的手","听你说话","陪着你","看看你","叫你的名字","和你待在一起","蹭蹭你","贴贴你","把今天讲给你听","把开心分给你","把心事说给你","等你回家","和你散步","和你发呆","和你一起吃饭","和你一起看月亮","和你一起做梦","和你一起过普通的一天","和你一起熬夜","和你一起早起","和你一起看海","和你一起淋雨","和你一起晒太阳","和你一起数星星","和你一起听歌","和你一起变老"];
+  const p2 = ["晚安，","早安，","今天也要","如果可以","等下次见面","在每一个","在梦里","在风里","在月亮下面","在回家的路上","在发呆的时候","在听歌的时候","在雨天","在晴天","在冬天","在夏天","在春天","在秋天","在人群里","在安静的时候"];
+const s2 = ["想抱抱你","想亲亲你","想见你","想牵你的手","想听你说话","想陪着你","想看看你","想叫你的名字","想和你待在一起","想蹭蹭你","想贴贴你","想把今天讲给你听","想把开心分给你","想把心事说给你","想等你回家","想和你散步","想和你发呆","想和你一起吃饭","想和你一起看月亮","想和你一起做梦","想和你一起过普通的一天","想和你一起熬夜","想和你一起早起","想和你一起看海","想和你一起淋雨","想和你一起晒太阳","想和你一起数星星","想和你一起听歌","想和你一起变老","想和你一起慢慢生活"];
+
+let allCards = [];
+for(let i=0; i<20; i++) for(let j=0; j<30; j++) allCards.push(p1[i] + s1[j]);
+for(let i=0; i<20; i++) for(let j=0; j<30; j++) allCards.push(p2[i] + s2[j]);
+  let state = JSON.parse(localStorage.getItem('peach_ins_v1')) || {
+  myName: '我', myAvatar: '', taName: '梦角', taAvatar: '',
+  chatBg: 'linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)',
+  myBubbleColor: '#a18cd1', chats: []
+};
+function save() { localStorage.setItem('peach_ins_v1', JSON.stringify(state)); }
+
+function render() {
+  document.getElementById('taNameDisplay').innerText = state.taName + ' ▼';
+  document.getElementById('setMyName').value = state.myName;
+  document.getElementById('setTaName').value = state.taName;
+  document.getElementById('setBubbleColor').value = state.myBubbleColor;
+  document.body.style.background = state.chatBg;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.documentElement.style.setProperty('--my-bubble', `linear-gradient(135deg, ${state.myBubbleColor} 0%, #fbc2eb 100%)`);
+
+  const chatArea = document.getElementById('chatArea');
+  chatArea.innerHTML = state.chats.map(m => `
+    <div class="msg ${m.role}">
+      <div class="avatar" style="background-image: url('${m.role === 'me' ? state.myAvatar : state.taAvatar}');">
+        ${(!m.role.includes('me') && !state.taAvatar) ? 'TA' : (!m.role.includes('me') && !state.myAvatar ? '我' : '')}
+      </div>
+      <div class="bubble">${m.text}</div>
+    </div>
+  `).join('');
+  setTimeout(() => { chatArea.scrollTop = chatArea.scrollHeight; }, 50);
+          }
+  function renderCards() {
+  const keyword = document.getElementById('searchInput').value.trim();
+  const list = document.getElementById('cardList');
+  const filtered = keyword ? allCards.filter(t => t.includes(keyword)) : allCards;
+  const toShow = keyword ? filtered : filtered.slice(0, 100);
+  list.innerHTML = toShow.map(text => `<div class="card-item" onclick="sendCard('${text}')">${text}</div>`).join('');
+}
+
+function toggleDrawer(id = 'drawer') {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+  if (id === 'drawer' && el.classList.contains('open')) renderCards();
+}
+function openSettings() { toggleDrawer('settingsPanel'); }
